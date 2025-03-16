@@ -14,6 +14,7 @@
 import pandas as pd
 import os
 import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt 
@@ -56,26 +57,36 @@ dataFrame = dataFrame.drop(cols, axis=1)
 # plt.show()
 
 
-category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+
+for col in miss_cols:
+    dataFrame[col] = dataFrame[col].fillna("Unknown")
+
 
 # for col in category_cols:
-#     labels = asarray(dataFrame[col])
+#     labels = asarray([dataFrame[col]])
 #     print(labels)
 #     encoder = OneHotEncoder()
 #     dataFrame[col] = encoder.fit_transform(labels)
 #     print(dataFrame[col])
 
+category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
+transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
-# miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+dataFrame_trans = transformer.fit_transform(dataFrame[category_cols])
 
-# for col in miss_cols:
-#     dataFrame[col] = dataFrame[col].fillna(dataFrame[col].median())
+dataFrame_trans = pd.DataFrame(dataFrame_trans)
+
+dataFrame.drop(category_cols, axis = 1)
+
+dataFrame.add(dataFrame_trans)
+
 
 print("Missing values in Data Frame:")
-print(dataFrame.isnull().sum())
+print(dataFrame_trans.isnull().sum())
 print()
 
 print("Types of data in Data Frame:")
-print(dataFrame.dtypes)
+print(dataFrame_trans.dtypes)
 print()
