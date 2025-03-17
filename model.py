@@ -15,10 +15,11 @@ import pandas as pd
 import os
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
 from numpy import asarray 
 from sklearn.preprocessing import OneHotEncoder
@@ -39,7 +40,6 @@ print(dataFrame.describe())
 print()
 
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
-target = 'ACCLASS'
 dataFrame = dataFrame.drop(cols, axis=1)
 
 # sns.countplot(x='ACCLASS', data=dataFrame)
@@ -49,44 +49,54 @@ dataFrame = dataFrame.drop(cols, axis=1)
 # sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
 # plt.show()
 
-# numerical_df = dataFrame.select_dtypes(include=['number'])
-
 # plt.figure(figsize=(12, 8))
 # sns.heatmap(numerical_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
 # plt.title("Correlation Heatmap of Numerical Features")
 # plt.show()
 
 
+target = dataFrame['ACCLASS']
+target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
+dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
+
+numeric_df = dataFrame_features.select_dtypes(include = int)
+categorical_df = dataFrame_features.select_dtypes(exclude = int)
+
 miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
 
 for col in miss_cols:
-    dataFrame[col] = dataFrame[col].fillna("Unknown")
+    dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
 
+# category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
-# for col in category_cols:
-#     labels = asarray([dataFrame[col]])
-#     print(labels)
-#     encoder = OneHotEncoder()
-#     dataFrame[col] = encoder.fit_transform(labels)
-#     print(dataFrame[col])
-
-category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
+category_cols = categorical_df.columns
 
 transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
-dataFrame_trans = transformer.fit_transform(dataFrame[category_cols])
+dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
 
-dataFrame_trans = pd.DataFrame(dataFrame_trans)
+encoded_columns = transformer.get_feature_names_out()
 
-dataFrame.drop(category_cols, axis = 1)
+dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
 
-dataFrame.add(dataFrame_trans)
+dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
 
-
-print("Missing values in Data Frame:")
-print(dataFrame_trans.isnull().sum())
-print()
+dataFrame_features = dataFrame_features.join(dataFrame_trans)
 
 print("Types of data in Data Frame:")
-print(dataFrame_trans.dtypes)
+print(dataFrame_features.dtypes)
 print()
+
+
+X_train, X_test, y_train, y_test = train_test_split(dataFrame_features, target, test_size=0.2, random_state=4)
+
+clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
+
+print("Training accuracy:")
+print(clf_linear.score(X_train, y_train))
+print()
+print("Testing accuracy:")
+print(clf_linear.score(X_test, y_test))
+print()
+
+
