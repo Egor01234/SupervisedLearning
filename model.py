@@ -1,4 +1,3 @@
-
 #Pre-processing - Retrieve & prepare the data: Load and explore the dataset referenced in section 4 in this document using techniques learnt during this course.
 # Visualize the data and describe it thoroughly, identify correlations..etc.
 # Clean, transform categorical data and model the dataset using the techniques learnt throughout the course in preparation for building a predictive model.
@@ -15,15 +14,22 @@ import pandas as pd
 import os
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+import SMOTE
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
 from numpy import asarray 
-from sklearn.preprocessing import OneHotEncoder
-path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+from sklearn.preprocessing import OneHotEncoder, TargetEncoder, StandardScaler
+from sklearn.pipeline import Pipeline, make_pipeline
+
+path = os.path.dirname(os.path.abspath(__file__))
+#path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
@@ -98,5 +104,58 @@ print()
 print("Testing accuracy:")
 print(clf_linear.score(X_test, y_test))
 print()
+
+# Preprocessing pipeline
+numerical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),  # Handle missing numerical values
+    ('scaler', StandardScaler())  # Normalize numerical features
+])
+
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),  # Handle missing categorical values
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))  # Encode categorical features
+])
+
+preprocessor = ColumnTransformer(transformers=[
+    ('num', numerical_transformer, numerical_cols),
+    ('cat', categorical_transformer, categorical_cols)
+])
+
+# Handle imbalanced classes using SMOTE
+smote = SMOTE(random_state=42)
+
+# Build complete pipeline
+pipeline = make_pipeline(
+    preprocessor,
+    smote,  # Apply SMOTE to balance classes
+    RandomForestClassifier(random_state=42, class_weight='balanced')  # Use RandomForest
+)
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    features, target, test_size=0.2, random_state=42, stratify=target
+)
+
+# Train the model
+pipeline.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = pipeline.predict(X_test)
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+
+# Cross-validation
+cv_scores = cross_val_score(pipeline, features, target, cv=5, scoring='f1_weighted')
+print(f"Cross-validation F1 scores: {cv_scores}")
+print(f"Average F1 score: {np.mean(cv_scores):.2f}")
+
 
 
