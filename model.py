@@ -13,6 +13,7 @@
 import pandas as pd
 import os
 import numpy as np
+from PIL.features import features
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -20,7 +21,6 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt
-import SMOTE
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix
@@ -43,6 +43,8 @@ print(dataFrame.isnull().sum())
 print()
 print("Numeric fields:")
 print(dataFrame.describe())
+print()
+print(dataFrame.columns)  # This will show all the column names in your dataframe.
 print()
 
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
@@ -76,6 +78,7 @@ for col in miss_cols:
 # category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
 category_cols = categorical_df.columns
+numerical_cols = numeric_df.columns
 
 transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
@@ -118,22 +121,18 @@ categorical_transformer = Pipeline(steps=[
 
 preprocessor = ColumnTransformer(transformers=[
     ('num', numerical_transformer, numerical_cols),
-    ('cat', categorical_transformer, categorical_cols)
+    ('cat', categorical_transformer, category_cols)
 ])
-
-# Handle imbalanced classes using SMOTE
-smote = SMOTE(random_state=42)
 
 # Build complete pipeline
 pipeline = make_pipeline(
     preprocessor,
-    smote,  # Apply SMOTE to balance classes
-    RandomForestClassifier(random_state=42, class_weight='balanced')  # Use RandomForest
+    RandomForestClassifier(random_state=42, class_weight='balanced')
 )
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(
-    features, target, test_size=0.2, random_state=42, stratify=target
+    dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
 # Train the model
