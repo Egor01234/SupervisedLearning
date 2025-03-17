@@ -71,7 +71,9 @@ transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_outpu
 
 dataFrame_trans = transformer.fit_transform(dataFrame[category_cols])
 
-dataFrame_trans = pd.DataFrame(dataFrame_trans)
+encoded_columns = transformer.get_feature_names_out()
+
+dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
 
 dataFrame = dataFrame.drop(category_cols, axis = 1)
 
