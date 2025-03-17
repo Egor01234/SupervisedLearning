@@ -20,16 +20,16 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt
-import SMOTE
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix
 from numpy import asarray 
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder, StandardScaler
 from sklearn.pipeline import Pipeline, make_pipeline
+from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-#path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
@@ -77,33 +77,31 @@ for col in miss_cols:
 
 category_cols = categorical_df.columns
 
-transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
+# transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
-dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
+# dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
 
-encoded_columns = transformer.get_feature_names_out()
+# encoded_columns = transformer.get_feature_names_out()
 
-dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
+# dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
 
-dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
+# dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
 
-dataFrame_features = dataFrame_features.join(dataFrame_trans)
+# dataFrame_features = dataFrame_features.join(dataFrame_trans)
 
 print("Types of data in Data Frame:")
-print(dataFrame_features.dtypes)
-print()
+# print(dataFrame_features.dtypes)
+# print()
 
 
-X_train, X_test, y_train, y_test = train_test_split(dataFrame_features, target, test_size=0.2, random_state=4)
+# clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
 
-clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
-
-print("Training accuracy:")
-print(clf_linear.score(X_train, y_train))
-print()
-print("Testing accuracy:")
-print(clf_linear.score(X_test, y_test))
-print()
+# print("Training accuracy:")
+# print(clf_linear.score(X_train, y_train))
+# print()
+# print("Testing accuracy:")
+# print(clf_linear.score(X_test, y_test))
+# print()
 
 # Preprocessing pipeline
 numerical_transformer = Pipeline(steps=[
@@ -113,31 +111,30 @@ numerical_transformer = Pipeline(steps=[
 
 categorical_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='most_frequent')),  # Handle missing categorical values
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))  # Encode categorical features
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))  # Encode categorical features
 ])
 
 preprocessor = ColumnTransformer(transformers=[
-    ('num', numerical_transformer, numerical_cols),
-    ('cat', categorical_transformer, categorical_cols)
+    ('num', numerical_transformer, numeric_df.columns),
+    ('cat', categorical_transformer, categorical_df.columns)
 ])
-
-# Handle imbalanced classes using SMOTE
-smote = SMOTE(random_state=42)
-
-# Build complete pipeline
-pipeline = make_pipeline(
-    preprocessor,
-    smote,  # Apply SMOTE to balance classes
-    RandomForestClassifier(random_state=42, class_weight='balanced')  # Use RandomForest
-)
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(
-    features, target, test_size=0.2, random_state=42, stratify=target
+    dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
+
+# Build complete pipeline
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),  # Preprocessing step
+    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  # Classifier
+])
 
 # Train the model
 pipeline.fit(X_train, y_train)
+
+
+
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)
@@ -153,7 +150,7 @@ plt.ylabel('Actual')
 plt.show()
 
 # Cross-validation
-cv_scores = cross_val_score(pipeline, features, target, cv=5, scoring='f1_weighted')
+cv_scores = cross_val_score(pipeline, dataFrame_features, target, cv=5, scoring='f1_weighted')
 print(f"Cross-validation F1 scores: {cv_scores}")
 print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
