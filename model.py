@@ -15,6 +15,7 @@ import pandas as pd
 import os
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt 
@@ -39,7 +40,6 @@ print(dataFrame.describe())
 print()
 
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
-target = 'ACCLASS'
 dataFrame = dataFrame.drop(cols, axis=1)
 
 # sns.countplot(x='ACCLASS', data=dataFrame)
@@ -55,13 +55,17 @@ dataFrame = dataFrame.drop(cols, axis=1)
 # plt.show()
 
 
-numeric_df = dataFrame.select_dtypes(include = int)
-categorical_df = dataFrame.select_dtypes(exclude = int)
+target = dataFrame['ACCLASS']
+target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
+dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
+
+numeric_df = dataFrame_features.select_dtypes(include = int)
+categorical_df = dataFrame_features.select_dtypes(exclude = int)
 
 miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
 
 for col in miss_cols:
-    dataFrame[col] = dataFrame[col].fillna("Unknown")
+    dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
 
 # category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
@@ -69,19 +73,30 @@ category_cols = categorical_df.columns
 
 transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
-dataFrame_trans = transformer.fit_transform(dataFrame[category_cols])
+dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
 
 encoded_columns = transformer.get_feature_names_out()
 
 dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
 
-dataFrame = dataFrame.drop(category_cols, axis = 1)
+dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
 
-dataFrame = dataFrame.join(dataFrame_trans)
+dataFrame_features = dataFrame_features.join(dataFrame_trans)
 
 print("Types of data in Data Frame:")
-print(dataFrame.dtypes)
+print(dataFrame_features.dtypes)
 print()
 
 
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=39)
+X_train, X_test, y_train, y_test = train_test_split(dataFrame_features, target, test_size=0.2, random_state=4)
+
+clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
+
+print("Training accuracy:")
+print(clf_linear.score(X_train, y_train))
+print()
+print("Testing accuracy:")
+print(clf_linear.score(X_test, y_test))
+print()
+
+
