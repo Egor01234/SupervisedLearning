@@ -49,28 +49,23 @@ dataFrame = dataFrame.drop(cols, axis=1)
 # sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
 # plt.show()
 
-# numerical_df = dataFrame.select_dtypes(include=['number'])
-
 # plt.figure(figsize=(12, 8))
 # sns.heatmap(numerical_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
 # plt.title("Correlation Heatmap of Numerical Features")
 # plt.show()
 
 
+numeric_df = dataFrame.select_dtypes(include = int)
+categorical_df = dataFrame.select_dtypes(exclude = int)
+
 miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
 
 for col in miss_cols:
     dataFrame[col] = dataFrame[col].fillna("Unknown")
 
+# category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
-# for col in category_cols:
-#     labels = asarray([dataFrame[col]])
-#     print(labels)
-#     encoder = OneHotEncoder()
-#     dataFrame[col] = encoder.fit_transform(labels)
-#     print(dataFrame[col])
-
-category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
+category_cols = categorical_df.columns
 
 transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
@@ -78,15 +73,19 @@ dataFrame_trans = transformer.fit_transform(dataFrame[category_cols])
 
 dataFrame_trans = pd.DataFrame(dataFrame_trans)
 
-dataFrame.drop(category_cols, axis = 1)
+dataFrame = dataFrame.drop(category_cols, axis = 1)
 
-dataFrame.add(dataFrame_trans)
+print("Types:")
+print(dataFrame.dtypes)
+print("")
+
+dataFrame = dataFrame.join(dataFrame_trans)
 
 
 print("Missing values in Data Frame:")
-print(dataFrame_trans.isnull().sum())
+print(dataFrame_trans.dtypes)
 print()
 
 print("Types of data in Data Frame:")
-print(dataFrame_trans.dtypes)
+print(dataFrame.dtypes)
 print()
