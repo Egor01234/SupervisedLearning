@@ -18,7 +18,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
 from numpy import asarray 
 from sklearn.preprocessing import OneHotEncoder
@@ -75,17 +75,11 @@ dataFrame_trans = pd.DataFrame(dataFrame_trans)
 
 dataFrame = dataFrame.drop(category_cols, axis = 1)
 
-print("Types:")
-print(dataFrame.dtypes)
-print("")
-
 dataFrame = dataFrame.join(dataFrame_trans)
-
-
-print("Missing values in Data Frame:")
-print(dataFrame_trans.dtypes)
-print()
 
 print("Types of data in Data Frame:")
 print(dataFrame.dtypes)
 print()
+
+
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=39)
