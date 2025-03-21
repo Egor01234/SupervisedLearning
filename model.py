@@ -13,6 +13,7 @@
 import pandas as pd
 import os
 import numpy as np
+from PIL.features import features
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -44,6 +45,8 @@ print()
 print("Numeric fields:")
 print(dataFrame.describe())
 print()
+print(dataFrame.columns)  # This will show all the column names in your dataframe.
+print()
 
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
 dataFrame = dataFrame.drop(cols, axis=1)
@@ -67,8 +70,6 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
 plt.title("Correlation Heatmap of Numerical Features")
 plt.show()
-
-
 
 
 # miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
@@ -118,9 +119,21 @@ categorical_transformer = Pipeline(steps=[
 ])
 
 preprocessor = ColumnTransformer(transformers=[
+
     ('num', numerical_transformer, numeric_df.columns),
     ('cat', categorical_transformer, categorical_df.columns)
 ])
+
+=======
+    ('num', numerical_transformer, numerical_cols),
+    ('cat', categorical_transformer, category_cols)
+])
+
+# Build complete pipeline
+pipeline = make_pipeline(
+    preprocessor,
+    RandomForestClassifier(random_state=42, class_weight='balanced')
+)
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(
