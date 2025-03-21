@@ -27,9 +27,10 @@ from sklearn.metrics import classification_report, confusion_matrix
 from numpy import asarray 
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder, StandardScaler
 from sklearn.pipeline import Pipeline, make_pipeline
+from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-#path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
@@ -50,18 +51,6 @@ print()
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
 dataFrame = dataFrame.drop(cols, axis=1)
 
-# sns.countplot(x='ACCLASS', data=dataFrame)
-# plt.title('Fatal vs. Non-Fatal Accidents')
-# plt.show()
-
-# sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
-# plt.show()
-
-# plt.figure(figsize=(12, 8))
-# sns.heatmap(numerical_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
-# plt.title("Correlation Heatmap of Numerical Features")
-# plt.show()
-
 
 target = dataFrame['ACCLASS']
 target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
@@ -70,43 +59,53 @@ dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
 
-miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+sns.countplot(x='ACCLASS', data=dataFrame)
+plt.title('Fatal vs. Non-Fatal Accidents')
+plt.show()
 
-for col in miss_cols:
-    dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
+sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
+plt.show()
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
+plt.title("Correlation Heatmap of Numerical Features")
+plt.show()
+
+
+# miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+
+# for col in miss_cols:
+#     dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
 
 # category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
-category_cols = categorical_df.columns
-numerical_cols = numeric_df.columns
+# category_cols = categorical_df.columns
 
-transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
+# transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
-dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
+# dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
 
-encoded_columns = transformer.get_feature_names_out()
+# encoded_columns = transformer.get_feature_names_out()
 
-dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
+# dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
 
-dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
+# dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
 
-dataFrame_features = dataFrame_features.join(dataFrame_trans)
+# dataFrame_features = dataFrame_features.join(dataFrame_trans)
 
-print("Types of data in Data Frame:")
-print(dataFrame_features.dtypes)
-print()
+# print("Types of data in Data Frame:")
+# print(dataFrame_features.dtypes)
+# print()
 
 
-X_train, X_test, y_train, y_test = train_test_split(dataFrame_features, target, test_size=0.2, random_state=4)
+# clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
 
-clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
-
-print("Training accuracy:")
-print(clf_linear.score(X_train, y_train))
-print()
-print("Testing accuracy:")
-print(clf_linear.score(X_test, y_test))
-print()
+# print("Training accuracy:")
+# print(clf_linear.score(X_train, y_train))
+# print()
+# print("Testing accuracy:")
+# print(clf_linear.score(X_test, y_test))
+# print()
 
 # Preprocessing pipeline
 numerical_transformer = Pipeline(steps=[
@@ -116,10 +115,16 @@ numerical_transformer = Pipeline(steps=[
 
 categorical_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='most_frequent')),  # Handle missing categorical values
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))  # Encode categorical features
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))  # Encode categorical features
 ])
 
 preprocessor = ColumnTransformer(transformers=[
+
+    ('num', numerical_transformer, numeric_df.columns),
+    ('cat', categorical_transformer, categorical_df.columns)
+])
+
+=======
     ('num', numerical_transformer, numerical_cols),
     ('cat', categorical_transformer, category_cols)
 ])
@@ -135,8 +140,17 @@ X_train, X_test, y_train, y_test = train_test_split(
     dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
+# Build complete pipeline
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),  # Preprocessing step
+    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  # Classifier
+])
+
 # Train the model
 pipeline.fit(X_train, y_train)
+
+
+
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)
@@ -152,7 +166,7 @@ plt.ylabel('Actual')
 plt.show()
 
 # Cross-validation
-cv_scores = cross_val_score(pipeline, features, target, cv=5, scoring='f1_weighted')
+cv_scores = cross_val_score(pipeline, dataFrame_features, target, cv=5, scoring='f1_weighted')
 print(f"Cross-validation F1 scores: {cv_scores}")
 print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
