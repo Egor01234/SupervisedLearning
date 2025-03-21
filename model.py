@@ -48,18 +48,6 @@ print()
 cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
 dataFrame = dataFrame.drop(cols, axis=1)
 
-# sns.countplot(x='ACCLASS', data=dataFrame)
-# plt.title('Fatal vs. Non-Fatal Accidents')
-# plt.show()
-
-# sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
-# plt.show()
-
-# plt.figure(figsize=(12, 8))
-# sns.heatmap(numerical_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
-# plt.title("Correlation Heatmap of Numerical Features")
-# plt.show()
-
 
 target = dataFrame['ACCLASS']
 target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
@@ -68,14 +56,29 @@ dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
 
-miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+sns.countplot(x='ACCLASS', data=dataFrame)
+plt.title('Fatal vs. Non-Fatal Accidents')
+plt.show()
 
-for col in miss_cols:
-    dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
+sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
+plt.show()
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
+plt.title("Correlation Heatmap of Numerical Features")
+plt.show()
+
+
+
+
+# miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
+
+# for col in miss_cols:
+#     dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
 
 # category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
 
-category_cols = categorical_df.columns
+# category_cols = categorical_df.columns
 
 # transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
 
@@ -89,7 +92,7 @@ category_cols = categorical_df.columns
 
 # dataFrame_features = dataFrame_features.join(dataFrame_trans)
 
-print("Types of data in Data Frame:")
+# print("Types of data in Data Frame:")
 # print(dataFrame_features.dtypes)
 # print()
 
