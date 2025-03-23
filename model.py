@@ -48,16 +48,43 @@ print()
 print(dataFrame.columns)  # This will show all the column names in your dataframe.
 print()
 
-cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
-dataFrame = dataFrame.drop(cols, axis=1)
-
-
 target = dataFrame['ACCLASS']
 target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
 dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
+
+for col in numeric_df.columns:
+    plt.figure(figsize=(10, 4))
+    sns.boxplot(x=dataFrame_features[col], orient='h')
+    plt.title(f'Boxplot of {col} (Outlier Detection)')
+    plt.xlabel(col)
+    plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+    plt.show()
+
+for col in numeric_df.columns:
+    plt.figure(figsize=(8, 4))
+    sns.violinplot(x=dataFrame_features[col], orient='h')
+    plt.title(f'Violinplot of {col} (Smooth density distribution)')
+    plt.ylabel(col)
+    plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+    plt.show()
+
+for col in categorical_df.columns:
+    plt.figure(figsize=(12, 4))
+    sns.countplot(x=col, data=dataFrame_features, order=dataFrame_features[col].value_counts().index)
+    plt.title(f'Count of categories in {col}')
+    plt.xticks(rotation=45)
+    plt.show()
+
+
+cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
+dataFrame = dataFrame.drop(cols, axis=1)
+
+numeric_df = dataFrame_features.select_dtypes(include = int)
+categorical_df = dataFrame_features.select_dtypes(exclude = int)
+
 
 sns.countplot(x='ACCLASS', data=dataFrame)
 plt.title('Fatal vs. Non-Fatal Accidents')
@@ -70,6 +97,9 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
 plt.title("Correlation Heatmap of Numerical Features")
 plt.show()
+
+
+    
 
 
 # miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
@@ -124,11 +154,6 @@ preprocessor = ColumnTransformer(transformers=[
     ('cat', categorical_transformer, categorical_df.columns)
 ])
 
-=======
-    ('num', numerical_transformer, numerical_cols),
-    ('cat', categorical_transformer, category_cols)
-])
-
 # Build complete pipeline
 pipeline = make_pipeline(
     preprocessor,
@@ -169,6 +194,3 @@ plt.show()
 cv_scores = cross_val_score(pipeline, dataFrame_features, target, cv=5, scoring='f1_weighted')
 print(f"Cross-validation F1 scores: {cv_scores}")
 print(f"Average F1 score: {np.mean(cv_scores):.2f}")
-
-
-
