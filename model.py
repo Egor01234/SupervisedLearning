@@ -45,7 +45,7 @@ print()
 print("Numeric fields:")
 print(dataFrame.describe())
 print()
-print(dataFrame.columns)  # This will show all the column names in your dataframe.
+print(dataFrame.columns) 
 print()
 
 target = dataFrame['ACCLASS']
@@ -54,9 +54,6 @@ dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 
 from imblearn.pipeline import Pipeline as ImbPipeline  # instead of sklearn Pipeline
 from imblearn.over_sampling import SMOTE
-
-# Build complete pipeline with SMOTE
-
 
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
@@ -85,8 +82,11 @@ categorical_df = dataFrame_features.select_dtypes(exclude = int)
 #     plt.show()
 
 
-cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
-dataFrame = dataFrame.drop(cols, axis=1)
+# cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
+# dataFrame = dataFrame.drop(cols, axis=1)
+
+cols = ['DIVISION', 'NEIGHBOURHOOD_140', 'NEIGHBOURHOOD_158', 'AG_DRIV', 'SPEEDING', 'MOTORCYCLE', 'PEDCOND', 'PEDTYPE', 'INITDIR', 'IMPACTYPE', 'VISIBILITY', 'LATITUDE', 'DISTRICT', 'OBJECTID', 'INDEX', 'STREET2', 'TRAFFCTL', 'LIGHT', 'INVAGE', 'FATAL_NO', 'CYCLISTYPE', 'CYCCOND', 'CYCLIST', 'TRSN_CITY_VEH', 'DISABILITY', 'HOOD_158', 'HOOD_140', 'PASSENGER', 'TRUCK', 'VEHTYPE', 'INJURY', 'INVTYPE', 'y', 'ACCNUM', 'DATE', 'x', 'ROAD_CLASS', 'EMERG_VEH', 'PEDESTRIAN', 'DRIVCOND', 'DRIVACT', 'PEDACT', 'OFFSET', 'LONGITUDE', 'CYCACT', 'REDLIGHT', 'ALCOHOL'] 
+dataFrame_features = dataFrame_features.drop(cols, axis=1)
 
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
@@ -133,23 +133,20 @@ X_train, X_test, y_train, y_test = train_test_split(
     dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
-# Build complete pipeline
-# pipeline = Pipeline(steps=[
-#     ('preprocessor', preprocessor),  # Preprocessing step
-#     ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  # Classifier
-# ])
 
 pipeline = ImbPipeline(steps=[
-    ('preprocessor', preprocessor),            # Preprocessing step
-    ('smote', SMOTE(random_state=42)),        # Oversampling on training set
-    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  # Classifier
+    ('preprocessor', preprocessor),            
+    ('smote', SMOTE(random_state=42)),     
+    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  
 ])
 
 # Train the model
 pipeline.fit(X_train, y_train)
 
 
-
+for name, score in zip(dataFrame_features.columns
+, pipeline.named_steps['classifier'].feature_importances_):
+    print(name, score)
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)
