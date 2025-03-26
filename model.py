@@ -1,4 +1,4 @@
-# Pre-processing - Retrieve & prepare the data: Load and explore the dataset referenced in section 4 in this document using techniques learnt during this course.
+#Pre-processing - Retrieve & prepare the data: Load and explore the dataset referenced in section 4 in this document using techniques learnt during this course.
 # Visualize the data and describe it thoroughly, identify correlations..etc.
 # Clean, transform categorical data and model the dataset using the techniques learnt throughout the course in preparation for building a predictive model.
 # Model building & fine tuningBuild a supervised predictive model based using a suitable classification algorithm(s) in python , utilizing scikit-learn, pandas, numpy…etc. To provide predictions as specified in project specification, section 3 of this report.
@@ -6,6 +6,8 @@
 # Model deployment: Build an API for the model using Python Flask framework.
 # Deploy the model on local host.
 # Build a simple front end to access the API and pass new feature values to the prediction model for inference. 
+
+
 
 
 import pandas as pd
@@ -22,17 +24,17 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix
-from numpy import asarray
+from numpy import asarray 
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder, StandardScaler
 from sklearn.pipeline import Pipeline, make_pipeline
 from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-#path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
-fullpath = os.path.join(path, filename)
-dataFrame = pd.read_csv(fullpath, sep=',')
+fullpath = os.path.join(path,filename)
+dataFrame = pd.read_csv(fullpath,sep=',')
 
 print("Types of data in Data Frame:")
 print(dataFrame.dtypes)
@@ -48,10 +50,10 @@ print()
 
 target = dataFrame['ACCLASS']
 target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
-dataFrame_features = dataFrame.drop('ACCLASS', axis=1)
+dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 
-numeric_df = dataFrame_features.select_dtypes(include=int)
-categorical_df = dataFrame_features.select_dtypes(exclude=int)
+numeric_df = dataFrame_features.select_dtypes(include = int)
+categorical_df = dataFrame_features.select_dtypes(exclude = int)
 
 for col in numeric_df.columns:
     plt.figure(figsize=(10, 4))
@@ -76,26 +78,29 @@ for col in categorical_df.columns:
     plt.xticks(rotation=45)
     plt.show()
 
-cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO',
-        'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE',
-        'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT',
-        'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y']
+
+cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
 dataFrame = dataFrame.drop(cols, axis=1)
 
-numeric_df = dataFrame_features.select_dtypes(include=int)
-categorical_df = dataFrame_features.select_dtypes(exclude=int)
-'''
+numeric_df = dataFrame_features.select_dtypes(include = int)
+categorical_df = dataFrame_features.select_dtypes(exclude = int)
+
+
 sns.countplot(x='ACCLASS', data=dataFrame)
 plt.title('Fatal vs. Non-Fatal Accidents')
 plt.show()
 
-sns.stripplot(x='VISIBILITY', y='ACCLASS', data=dataFrame, jitter=True)
+sns.stripplot(x= 'VISIBILITY',y = 'ACCLASS', data = dataFrame, jitter = True)
 plt.show()
 
 plt.figure(figsize=(12, 8))
 sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
 plt.title("Correlation Heatmap of Numerical Features")
-plt.show()'''
+plt.show()
+
+
+    
+
 
 # miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
 
@@ -168,6 +173,9 @@ pipeline = Pipeline(steps=[
 
 # Train the model
 pipeline.fit(X_train, y_train)
+
+
+
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)
