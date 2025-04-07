@@ -9,10 +9,10 @@
 
 
 
-
 import pandas as pd
 import os
 import numpy as np
+import pickle
 from PIL.features import features
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
@@ -30,7 +30,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+fullpath = r"MOTORCYCLIST_KSI_-9032082310316605521.csv"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
@@ -45,42 +45,48 @@ print()
 print("Numeric fields:")
 print(dataFrame.describe())
 print()
-print(dataFrame.columns)  # This will show all the column names in your dataframe.
+print(dataFrame.columns) 
 print()
 
 target = dataFrame['ACCLASS']
 target = target.replace({'Fatal': 1, 'Non-Fatal Injury': 0})
 dataFrame_features = dataFrame.drop('ACCLASS', axis = 1)
 
+from imblearn.pipeline import Pipeline as ImbPipeline  # instead of sklearn Pipeline
+from imblearn.over_sampling import SMOTE
+
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
 
-for col in numeric_df.columns:
-    plt.figure(figsize=(10, 4))
-    sns.boxplot(x=dataFrame_features[col], orient='h')
-    plt.title(f'Boxplot of {col} (Outlier Detection)')
-    plt.xlabel(col)
-    plt.grid(True, axis='x', linestyle='--', alpha=0.5)
-    plt.show()
+# for col in numeric_df.columns:
+#     plt.figure(figsize=(10, 4))
+#     sns.boxplot(x=dataFrame_features[col], orient='h')
+#     plt.title(f'Boxplot of {col} (Outlier Detection)')
+#     plt.xlabel(col)
+#     plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+#     plt.show()
 
-for col in numeric_df.columns:
-    plt.figure(figsize=(8, 4))
-    sns.violinplot(x=dataFrame_features[col], orient='h')
-    plt.title(f'Violinplot of {col} (Smooth density distribution)')
-    plt.ylabel(col)
-    plt.grid(True, axis='x', linestyle='--', alpha=0.5)
-    plt.show()
+# for col in numeric_df.columns:
+#     plt.figure(figsize=(8, 4))
+#     sns.violinplot(x=dataFrame_features[col], orient='h')
+#     plt.title(f'Violinplot of {col} (Smooth density distribution)')
+#     plt.ylabel(col)
+#     plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+#     plt.show()
 
-for col in categorical_df.columns:
-    plt.figure(figsize=(12, 4))
-    sns.countplot(x=col, data=dataFrame_features, order=dataFrame_features[col].value_counts().index)
-    plt.title(f'Count of categories in {col}')
-    plt.xticks(rotation=45)
-    plt.show()
+# for col in categorical_df.columns:
+#     plt.figure(figsize=(12, 4))
+#     sns.countplot(x=col, data=dataFrame_features, order=dataFrame_features[col].value_counts().index)
+#     plt.title(f'Count of categories in {col}')
+#     plt.xticks(rotation=45)
+#     plt.show()
 
 
-cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
-dataFrame = dataFrame.drop(cols, axis=1)
+# cols = ['OBJECTID', 'INDEX', 'ACCNUM', 'STREET2', 'OFFSET', 'LATITUDE', 'LONGITUDE', 'INVTYPE', 'INJURY', 'FATAL_NO', 'INITDIR', 'PEDACT', 'PEDCOND', 'CYCLISTYPE', 'CYCACT', 'CYCCOND', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH', 'EMERG_VEH', 'PEDTYPE', 'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY', 'HOOD_140', 'NEIGHBOURHOOD_140', 'DIVISION', 'x', 'y'] 
+# dataFrame = dataFrame.drop(cols, axis=1)
+
+cols = ['DIVISION', 'NEIGHBOURHOOD_140', 'NEIGHBOURHOOD_158', 'AG_DRIV', 'SPEEDING', 'MOTORCYCLE', 'PEDCOND', 'PEDTYPE', 'INITDIR', 'IMPACTYPE', 'VISIBILITY', 'LATITUDE', 'DISTRICT', 'OBJECTID', 'INDEX', 'STREET2', 'TRAFFCTL', 'LIGHT', 'INVAGE', 'FATAL_NO', 'CYCLISTYPE', 'CYCCOND', 'CYCLIST', 'TRSN_CITY_VEH', 'DISABILITY', 'HOOD_158', 'HOOD_140', 'PASSENGER', 'TRUCK', 'VEHTYPE', 'INJURY', 'INVTYPE', 'y', 'ACCNUM', 'DATE', 'x', 'ROAD_CLASS', 'EMERG_VEH', 'PEDESTRIAN', 'DRIVCOND', 'DRIVACT', 'PEDACT', 'OFFSET', 'LONGITUDE', 'CYCACT', 'REDLIGHT', 'ALCOHOL'] 
+dataFrame_features = dataFrame_features.drop(cols, axis=1)
 
 numeric_df = dataFrame_features.select_dtypes(include = int)
 categorical_df = dataFrame_features.select_dtypes(exclude = int)
@@ -98,44 +104,6 @@ sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidth
 plt.title("Correlation Heatmap of Numerical Features")
 plt.show()
 
-
-    
-
-
-# miss_cols = ['ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'ROAD_CLASS', 'DISTRICT']
-
-# for col in miss_cols:
-#     dataFrame_features[col] = dataFrame_features[col].fillna("Unknown")
-
-# category_cols = ['DATE','STREET1','ROAD_CLASS','LIGHT','RDSFCOND','ACCLASS','NEIGHBOURHOOD_158','ACCLOC', 'VEHTYPE', 'MANOEUVER', 'DRIVACT', 'DRIVCOND', 'TRAFFCTL', 'VISIBILITY', 'IMPACTYPE', 'DISTRICT']
-
-# category_cols = categorical_df.columns
-
-# transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(sparse_output=False), category_cols)], remainder='passthrough')
-
-# dataFrame_trans = transformer.fit_transform(dataFrame_features[category_cols])
-
-# encoded_columns = transformer.get_feature_names_out()
-
-# dataFrame_trans = pd.DataFrame(dataFrame_trans, columns=encoded_columns)
-
-# dataFrame_features = dataFrame_features.drop(category_cols, axis = 1)
-
-# dataFrame_features = dataFrame_features.join(dataFrame_trans)
-
-# print("Types of data in Data Frame:")
-# print(dataFrame_features.dtypes)
-# print()
-
-
-# clf_linear = SVC(kernel = 'linear', C=0.1, random_state=39).fit(X_train, y_train)
-
-# print("Training accuracy:")
-# print(clf_linear.score(X_train, y_train))
-# print()
-# print("Testing accuracy:")
-# print(clf_linear.score(X_test, y_test))
-# print()
 
 # Preprocessing pipeline
 numerical_transformer = Pipeline(steps=[
@@ -165,17 +133,20 @@ X_train, X_test, y_train, y_test = train_test_split(
     dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
-# Build complete pipeline
-pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),  # Preprocessing step
-    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  # Classifier
+
+pipeline = ImbPipeline(steps=[
+    ('preprocessor', preprocessor),            
+    ('smote', SMOTE(random_state=42)),     
+    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced'))  
 ])
 
 # Train the model
 pipeline.fit(X_train, y_train)
 
 
-
+for name, score in zip(dataFrame_features.columns
+, pipeline.named_steps['classifier'].feature_importances_):
+    print(name, score)
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)
@@ -194,3 +165,6 @@ plt.show()
 cv_scores = cross_val_score(pipeline, dataFrame_features, target, cv=5, scoring='f1_weighted')
 print(f"Cross-validation F1 scores: {cv_scores}")
 print(f"Average F1 score: {np.mean(cv_scores):.2f}")
+
+with open('model.pkl', 'wb') as f:
+    pickle.dump(pipeline, f)
