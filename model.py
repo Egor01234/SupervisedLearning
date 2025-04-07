@@ -30,7 +30,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-fullpath = r"C:\Users\aniti\OneDrive\Desktop\ANSHY\Centennial\Semester_4\Supervised_Learning\Projects\MOTORCYCLIST_KSI_-9032082310316605521.csv"
+fullpath = r"MOTORCYCLIST_KSI_-9032082310316605521.csv"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
