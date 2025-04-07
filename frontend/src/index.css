@@ -1,0 +1,5 @@
+/* src/index.css (minimal) */
+body {
+  margin: 0;
+  font-family: sans-serif; /* Or keep Vite's default font stack */
+}

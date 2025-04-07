@@ -1,0 +1,36 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accident Severity Predictor</title>
+</head>
+<body>
+    <h2>Accident Severity Predictor</h2>
+
+    <form method="POST" action="/predict">
+        <label>ACCLOC:</label><br>
+        <input type="text" name="ACCLOC" required><br><br>
+
+        <label>MANOEUVER:</label><br>
+        <input type="text" name="MANOEUVER" required><br><br>
+
+        <label>AUTOMOBILE (1 or 0):</label><br>
+        <input type="number" name="AUTOMOBILE" min="0" max="1" required><br><br>
+
+        <label>STREET1:</label><br>
+        <input type="text" name="STREET1" required><br><br>
+
+        <label>TIME:</label><br>
+        <input type="text" name="TIME" required><br><br>
+
+        <label>RDSFCOND:</label><br>
+        <input type="text" name="RDSFCOND" required><br><br>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <h3>Prediction: {{ prediction }}</h3>
+    {% endif %}
+</body>
+</html>

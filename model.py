@@ -9,10 +9,10 @@
 
 
 
-
 import pandas as pd
 import os
 import numpy as np
+import pickle
 from PIL.features import features
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
@@ -30,7 +30,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from imblearn.over_sampling import SMOTE
 
 path = os.path.dirname(os.path.abspath(__file__))
-path = "/Users/egor/Documents/GitHub/SupervisedLearning/"
+fullpath = r"MOTORCYCLIST_KSI_-9032082310316605521.csv"
 filename = 'MOTORCYCLIST_KSI_-9032082310316605521.csv'
 
 fullpath = os.path.join(path,filename)
@@ -165,3 +165,6 @@ plt.show()
 cv_scores = cross_val_score(pipeline, dataFrame_features, target, cv=5, scoring='f1_weighted')
 print(f"Cross-validation F1 scores: {cv_scores}")
 print(f"Average F1 score: {np.mean(cv_scores):.2f}")
+
+with open('model.pkl', 'wb') as f:
+    pickle.dump(pipeline, f)
