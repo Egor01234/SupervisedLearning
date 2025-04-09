@@ -133,6 +133,46 @@ X_train, X_test, y_train, y_test = train_test_split(
     dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+models = {
+    'RandomForest': RandomForestClassifier(random_state=42, class_weight='balanced'),
+    'DecisionTree': DecisionTreeClassifier(random_state=42, class_weight='balanced'),
+    'SVM': SVC(probability=True, random_state=42, class_weight='balanced'),
+    'LogisticRegression': LogisticRegression(max_iter=1000, class_weight='balanced'),
+    'NaiveBayes': GaussianNB()
+}
+
+results = {}
+
+for model_name, model_instance in models.items():
+    pipeline = ImbPipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('smote', SMOTE(random_state=42)),
+        ('classifier', model_instance)
+    ])
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+
+    # Store scores in a dictionary
+    results[model_name] = {
+        'Accuracy': accuracy_score(y_test, y_pred),
+        'Precision': precision_score(y_test, y_pred, average='weighted'),
+        'Recall': recall_score(y_test, y_pred, average='weighted'),
+        'F1 Score': f1_score(y_test, y_pred, average='weighted')
+    }
+
+# Display the results
+for model, scores in results.items():
+    print(f"\nModel: {model}")
+    for metric, score in scores.items():
+        print(f"{metric}: {score:.4f}")
+
+modelResults_df = pd.DataFrame(results).T  # Transpose for better format
+print(f"\nModel Dictionary: {modelResults_df}\n")
 
 pipeline = ImbPipeline(steps=[
     ('preprocessor', preprocessor),            
@@ -178,3 +218,35 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
+
+#Geohashing
+dataFrame['lat_bin'] = pd.cut(dataFrame['LATITUDE'], bins=50)
+dataFrame['lon_bin'] = pd.cut(dataFrame['LONGITUDE'], bins=50)
+hot_zones = dataFrame.groupby(['lat_bin', 'lon_bin'], observed=True).size().reset_index(name='counts')
+top_zones = hot_zones.sort_values(by='counts', ascending=False).head(10)
+print(top_zones)
+print()
+zone_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts().reset_index()
+zone_counts.columns = ['Neighbourhood', 'Accident Count']
+
+# Show top 10 accident-prone areas
+print(zone_counts.head(10))
+
+import matplotlib.pyplot as plt
+
+# Top lat/lon zones
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.barh(top_zones.index.astype(str), top_zones['counts'], color='skyblue')
+plt.title('Top Grid Hot Zones')
+plt.xlabel('Accident Count')
+plt.ylabel('Lat/Lon Bin Index')
+
+# Top neighborhoods
+plt.subplot(1, 2, 2)
+plt.barh(zone_counts['Neighbourhood'].head(10), zone_counts['Accident Count'].head(10), color='orange')
+plt.title('Top Neighbourhoods')
+plt.xlabel('Accident Count')
+plt.tight_layout()
+plt.show()
+
