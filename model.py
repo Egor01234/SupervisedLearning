@@ -144,9 +144,19 @@ pipeline = ImbPipeline(steps=[
 pipeline.fit(X_train, y_train)
 
 
-for name, score in zip(dataFrame_features.columns
-, pipeline.named_steps['classifier'].feature_importances_):
-    print(name, score)
+feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
+
+importances = pipeline.named_steps['classifier'].feature_importances_
+
+feat_imp = pd.Series(importances, index=feature_names)
+
+feat_imp = feat_imp.sort_values(ascending=False).head(10)
+
+feat_imp.plot(kind='barh', figsize=(10, 8), title="Top 10 Most Important Features")
+plt.xlabel("Importance Score")
+plt.tight_layout()
+plt.show()
+
 
 # Evaluate the model
 y_pred = pipeline.predict(X_test)

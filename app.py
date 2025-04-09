@@ -15,7 +15,6 @@ except FileNotFoundError:
 except Exception as e:
     print(f"Error loading model: {e}")
     model = None
-
 @app.route('/')
 def index():
   
