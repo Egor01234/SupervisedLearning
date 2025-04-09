@@ -209,55 +209,34 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
 
-import geopandas as gpd
+#Geohashing
+dataFrame['lat_bin'] = pd.cut(dataFrame['LATITUDE'], bins=50)
+dataFrame['lon_bin'] = pd.cut(dataFrame['LONGITUDE'], bins=50)
+hot_zones = dataFrame.groupby(['lat_bin', 'lon_bin'], observed=True).size().reset_index(name='counts')
+top_zones = hot_zones.sort_values(by='counts', ascending=False).head(10)
+print(top_zones)
+print()
+zone_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts().reset_index()
+zone_counts.columns = ['Neighbourhood', 'Accident Count']
+
+# Show top 10 accident-prone areas
+print(zone_counts.head(10))
+
 import matplotlib.pyplot as plt
-import contextily as ctx
 
-# Create a GeoDataFrame
-gdf = gpd.GeoDataFrame(dataFrame,
-                       geometry=gpd.points_from_xy(dataFrame.LONGITUDE, dataFrame.LATITUDE),
-                       crs="EPSG:4326")
+# Top lat/lon zones
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.barh(top_zones.index.astype(str), top_zones['counts'], color='skyblue')
+plt.title('Top Grid Hot Zones')
+plt.xlabel('Accident Count')
+plt.ylabel('Lat/Lon Bin Index')
 
-# Convert to Web Mercator for contextily
-gdf = gdf.to_crs(epsg=3857)
-
-# Plot
-fig, ax = plt.subplots(figsize=(12, 8))
-gdf.plot(ax=ax, alpha=0.5, marker='o', color='red', markersize=10)
-ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
-plt.title('Accident Locations')
-plt.xlabel('Longitude')
-plt.ylabel('Latitude')
-plt.show()
-
-accident_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts()
-print(accident_counts.head(10))  # Display top 10 neighbourhoods with most accidents
-
-from sklearn.cluster import DBSCAN
-import numpy as np
-
-# Extract coordinates
-coords = dataFrame[['LATITUDE', 'LONGITUDE']].to_numpy()
-
-# Apply DBSCAN
-db = DBSCAN(eps=0.01, min_samples=10, metric='haversine').fit(np.radians(coords))
-
-# Add cluster labels to the DataFrame
-dataFrame['cluster'] = db.labels_
-
-# Visualize clusters
-plt.figure(figsize=(12, 8))
-plt.scatter(dataFrame['LONGITUDE'], dataFrame['LATITUDE'], c=dataFrame['cluster'], cmap='viridis', s=10)
-plt.title('Accident Clusters')
-plt.xlabel('Longitude')
-plt.ylabel('Latitude')
-plt.show()
-
-dataFrame['DATE'] = pd.to_datetime(dataFrame['DATE'])
-dataFrame['Hour'] = dataFrame['DATE'].dt.hour
-hourly_accidents = dataFrame.groupby('Hour').size()
-hourly_accidents.plot(kind='bar', figsize=(12, 6), title='Accidents by Hour')
-plt.xlabel('Hour of the Day')
-plt.ylabel('Number of Accidents')
+# Top neighborhoods
+plt.subplot(1, 2, 2)
+plt.barh(zone_counts['Neighbourhood'].head(10), zone_counts['Accident Count'].head(10), color='orange')
+plt.title('Top Neighbourhoods')
+plt.xlabel('Accident Count')
+plt.tight_layout()
 plt.show()
 
