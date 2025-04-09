@@ -209,12 +209,14 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
 
+#Inteeractive heatmap
 import folium
 from folium.plugins import HeatMap
 
 m = folium.Map(location=[dataFrame['LATITUDE'].mean(), dataFrame['LONGITUDE'].mean()], zoom_start=12)
 heat_data = [[row['LATITUDE'], row['LONGITUDE']] for index, row in dataFrame.iterrows()]
 HeatMap(heat_data).add_to(m)
+
 legend_html = """
 <div style="
     position: fixed; 
@@ -235,4 +237,62 @@ legend_html = """
 m.get_root().html.add_child(folium.Element(legend_html))
 
 m.save("accident_heatmap.html")
+import webbrowser
+webbrowser.open("accident_heatmap.html")
+
+#Geospatial Analysis
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import contextily as ctx
+
+# Create a GeoDataFrame
+gdf = gpd.GeoDataFrame(dataFrame,
+                       geometry=gpd.points_from_xy(dataFrame.LONGITUDE, dataFrame.LATITUDE),
+                       crs="EPSG:4326")
+
+# Convert to Web Mercator for contextily
+gdf = gdf.to_crs(epsg=3857)
+
+# Plot
+fig, ax = plt.subplots(figsize=(12, 8))
+gdf.plot(ax=ax, alpha=0.5, marker='o', color='red', markersize=10)
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+plt.title('Accident Locations')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+
+print()
+accident_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts()
+print(accident_counts.head(10))  # Display top 10 neighbourhoods with most accidents
+
+'''from sklearn.cluster import DBSCAN
+import numpy as np
+
+# Extract coordinates
+coords = dataFrame[['LATITUDE', 'LONGITUDE']].to_numpy()
+
+# Apply DBSCAN
+db = DBSCAN(eps=0.01, min_samples=10, metric='haversine').fit(np.radians(coords))
+
+# Add cluster labels to the DataFrame
+dataFrame['cluster'] = db.labels_
+
+# Visualize clusters
+plt.figure(figsize=(12, 8))
+plt.scatter(dataFrame['LONGITUDE'], dataFrame['LATITUDE'], c=dataFrame['cluster'], cmap='viridis', s=10)
+plt.title('Accident Clusters')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()'''
+
+dataFrame['DATE'] = pd.to_datetime(dataFrame['DATE'])
+dataFrame['Hour'] = dataFrame['DATE'].dt.hour
+hourly_accidents = dataFrame.groupby('Hour').size()
+hourly_accidents.plot(kind='bar', figsize=(12, 6), title='Accidents by Hour')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Number of Accidents')
+plt.show()
+
+
 
