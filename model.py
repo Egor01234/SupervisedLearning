@@ -208,7 +208,7 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
-
+"""
 # Interactive heatmap for major accident zones
 import folium
 from folium.plugins import HeatMap
@@ -240,3 +240,34 @@ m.get_root().html.add_child(folium.Element(legend_html))
 
 # Save to HTML or display
 m.save("accident_heatmap.html")
+"""
+
+dataFrame['lat_bin'] = pd.cut(dataFrame['LATITUDE'], bins=50)
+dataFrame['lon_bin'] = pd.cut(dataFrame['LONGITUDE'], bins=50)
+hot_zones = dataFrame.groupby(['lat_bin', 'lon_bin'], observed=True).size().reset_index(name='counts')
+top_zones = hot_zones.sort_values(by='counts', ascending=False).head(10)
+print(top_zones)
+print()
+zone_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts().reset_index()
+zone_counts.columns = ['Neighbourhood', 'Accident Count']
+
+# Show top 10 accident-prone areas
+print(zone_counts.head(10))
+
+import matplotlib.pyplot as plt
+
+# Top lat/lon zones
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.barh(top_zones.index.astype(str), top_zones['counts'], color='skyblue')
+plt.title('Top Grid Hot Zones')
+plt.xlabel('Accident Count')
+plt.ylabel('Lat/Lon Bin Index')
+
+# Top neighborhoods
+plt.subplot(1, 2, 2)
+plt.barh(zone_counts['Neighbourhood'].head(10), zone_counts['Accident Count'].head(10), color='orange')
+plt.title('Top Neighbourhoods')
+plt.xlabel('Accident Count')
+plt.tight_layout()
+plt.show()
