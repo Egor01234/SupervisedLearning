@@ -133,6 +133,46 @@ X_train, X_test, y_train, y_test = train_test_split(
     dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
 )
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+models = {
+    'RandomForest': RandomForestClassifier(random_state=42, class_weight='balanced'),
+    'DecisionTree': DecisionTreeClassifier(random_state=42, class_weight='balanced'),
+    'SVM': SVC(probability=True, random_state=42, class_weight='balanced'),
+    'LogisticRegression': LogisticRegression(max_iter=1000, class_weight='balanced'),
+    'NaiveBayes': GaussianNB()
+}
+
+results = {}
+
+for model_name, model_instance in models.items():
+    pipeline = ImbPipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('smote', SMOTE(random_state=42)),
+        ('classifier', model_instance)
+    ])
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+
+    # Store scores in a dictionary
+    results[model_name] = {
+        'Accuracy': accuracy_score(y_test, y_pred),
+        'Precision': precision_score(y_test, y_pred, average='weighted'),
+        'Recall': recall_score(y_test, y_pred, average='weighted'),
+        'F1 Score': f1_score(y_test, y_pred, average='weighted')
+    }
+
+# Display the results
+for model, scores in results.items():
+    print(f"\nModel: {model}")
+    for metric, score in scores.items():
+        print(f"{metric}: {score:.4f}")
+
+modelResults_df = pd.DataFrame(results).T  # Transpose for better format
+print(f"\nModel Dictionary: {modelResults_df}\n")
 
 pipeline = ImbPipeline(steps=[
     ('preprocessor', preprocessor),            
@@ -178,3 +218,56 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import contextily as ctx
+
+# Create a GeoDataFrame
+gdf = gpd.GeoDataFrame(dataFrame,
+                       geometry=gpd.points_from_xy(dataFrame.LONGITUDE, dataFrame.LATITUDE),
+                       crs="EPSG:4326")
+
+# Convert to Web Mercator for contextily
+gdf = gdf.to_crs(epsg=3857)
+
+# Plot
+fig, ax = plt.subplots(figsize=(12, 8))
+gdf.plot(ax=ax, alpha=0.5, marker='o', color='red', markersize=10)
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+plt.title('Accident Locations')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+
+accident_counts = dataFrame['NEIGHBOURHOOD_140'].value_counts()
+print(accident_counts.head(10))  # Display top 10 neighbourhoods with most accidents
+
+from sklearn.cluster import DBSCAN
+import numpy as np
+
+# Extract coordinates
+coords = dataFrame[['LATITUDE', 'LONGITUDE']].to_numpy()
+
+# Apply DBSCAN
+db = DBSCAN(eps=0.01, min_samples=10, metric='haversine').fit(np.radians(coords))
+
+# Add cluster labels to the DataFrame
+dataFrame['cluster'] = db.labels_
+
+# Visualize clusters
+plt.figure(figsize=(12, 8))
+plt.scatter(dataFrame['LONGITUDE'], dataFrame['LATITUDE'], c=dataFrame['cluster'], cmap='viridis', s=10)
+plt.title('Accident Clusters')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+
+dataFrame['DATE'] = pd.to_datetime(dataFrame['DATE'])
+dataFrame['Hour'] = dataFrame['DATE'].dt.hour
+hourly_accidents = dataFrame.groupby('Hour').size()
+hourly_accidents.plot(kind='bar', figsize=(12, 6), title='Accidents by Hour')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Number of Accidents')
+plt.show()
+
