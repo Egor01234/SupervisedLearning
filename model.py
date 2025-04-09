@@ -208,3 +208,35 @@ print(f"Average F1 score: {np.mean(cv_scores):.2f}")
 
 with open('model.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
+
+# Interactive heatmap for major accident zones
+import folium
+from folium.plugins import HeatMap
+
+# Create a base map
+m = folium.Map(location=[dataFrame['LATITUDE'].mean(), dataFrame['LONGITUDE'].mean()], zoom_start=12)
+
+# Add HeatMap
+heat_data = [[row['LATITUDE'], row['LONGITUDE']] for index, row in dataFrame.iterrows()]
+HeatMap(heat_data).add_to(m)
+legend_html = """
+<div style="
+    position: fixed; 
+    bottom: 50px; left: 50px; width: 180px; height: 130px; 
+    background-color: white; 
+    border:2px solid grey; 
+    z-index:9999; 
+    font-size:14px;
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+">
+    <b>Heatmap Legend</b><br>
+    <i style="background:rgba(255,0,0,0.7);width:18px;height:18px;float:left;margin-right:8px"></i> High density<br>
+    <i style="background:rgba(255,255,0,0.7);width:18px;height:18px;float:left;margin-right:8px"></i> Medium density<br>
+    <i style="background:rgba(0,0,255,0.7);width:18px;height:18px;float:left;margin-right:8px"></i> Low density<br>
+</div>
+"""
+m.get_root().html.add_child(folium.Element(legend_html))
+
+# Save to HTML or display
+m.save("accident_heatmap.html")
