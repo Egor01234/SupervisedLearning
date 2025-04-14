@@ -43,3 +43,27 @@ dataFrame_features = dataFrame_features.drop(cols, axis=1)
 # Identify numeric and categorical features
 numeric_df = dataFrame_features.select_dtypes(include=int)
 categorical_df = dataFrame_features.select_dtypes(exclude=int)
+
+# ============ Visualization ============
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Plot Fatal vs. Non-Fatal Accidents
+plt.figure(figsize=(8, 5))
+sns.countplot(x='ACCLASS', data=dataFrame)
+plt.title('Fatal vs. Non-Fatal Accidents')
+plt.savefig('Plots/fatal_vs_non_fatal_accidents.png')  
+plt.show()
+
+# Print class distribution
+class_counts = target.value_counts()
+print("Class distribution:")
+print(class_counts)
+print(f"Proportion of Fatal cases: {class_counts[1]/len(target):.2%}")
+
+# Correlation Heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
+plt.title("Correlation Heatmap of Numerical Features")
+plt.savefig('Plots/correlation_heatmap.png')  
+plt.show()
