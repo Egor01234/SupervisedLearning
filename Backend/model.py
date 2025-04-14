@@ -67,3 +67,31 @@ sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidth
 plt.title("Correlation Heatmap of Numerical Features")
 plt.savefig('Plots/correlation_heatmap.png')  
 plt.show()
+
+# ============ Train-Test Split ============
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    dataFrame_features, target, test_size=0.2, random_state=42, stratify=target
+)
+
+# ============ Preprocessing Pipelines ============
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
+
+numerical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+])
+
+preprocessor = ColumnTransformer(transformers=[
+    ('num', numerical_transformer, numeric_df.columns),
+    ('cat', categorical_transformer, categorical_df.columns)
+])
