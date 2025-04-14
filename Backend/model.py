@@ -202,3 +202,33 @@ plt.xlabel('Hour of the Day')
 plt.ylabel('Number of Accidents')
 plt.savefig('Plots/accidents_by_hour.png')
 plt.show()
+
+# ============ Top 5 Model ============
+import joblib
+
+model_save_directory = 'model_pkl'
+
+if not os.path.exists(model_save_directory):
+    os.makedirs(model_save_directory)
+    print(f"Created directory: {model_save_directory}")
+
+top_models = ['DecisionTree', 'RandomForest', 'GradientBoosting', 'LogisticRegression', 'SVM']
+
+for model_name in top_models:
+    print(f"\nTraining and saving {model_name} model...")
+
+    final_pipeline = ImbPipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('smote', SMOTE(random_state=42)),
+        ('classifier', models[model_name])
+    ])
+
+    final_pipeline.fit(X_train, y_train)
+
+    file_name = f'{model_name}_model.pkl'
+    save_path = os.path.join(model_save_directory, file_name)
+
+    joblib.dump(final_pipeline, save_path)
+    print(f"{model_name} model saved as {save_path}")
+
+print("\nFinished saving top models.")
