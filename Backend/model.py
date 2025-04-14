@@ -95,3 +95,25 @@ preprocessor = ColumnTransformer(transformers=[
     ('num', numerical_transformer, numeric_df.columns),
     ('cat', categorical_transformer, categorical_df.columns)
 ])
+
+# ============ Modeling & Evaluation ============
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+from imblearn.pipeline import Pipeline as ImbPipeline
+from imblearn.over_sampling import SMOTE
+
+models = {
+    'RandomForest': RandomForestClassifier(random_state=42, class_weight='balanced'),
+    'DecisionTree': DecisionTreeClassifier(random_state=42, class_weight='balanced'),
+    'SVM': SVC(probability=True, random_state=42, class_weight='balanced'),
+    'LogisticRegression': LogisticRegression(max_iter=1000, class_weight='balanced'),
+    'NaiveBayes': GaussianNB(),
+    'GradientBoosting': GradientBoostingClassifier(random_state=42)
+}
+
+results = {}
