@@ -148,3 +148,57 @@ for model_name, model_instance in models.items():
     plt.tight_layout()
     plt.savefig(f'Plots/confusion_matrix_{model_name}.png') 
     plt.show()
+    
+    # ============ GeoDataFrame Plot ============
+import geopandas as gpd
+import contextily as ctx
+
+# Create a GeoDataFrame
+gdf = gpd.GeoDataFrame(dataFrame,
+                       geometry=gpd.points_from_xy(dataFrame.LONGITUDE, dataFrame.LATITUDE),
+                       crs="EPSG:4326")
+
+# Convert to Web Mercator for contextily
+gdf = gdf.to_crs(epsg=3857)
+
+# Plot Accident Locations
+fig, ax = plt.subplots(figsize=(12, 8))
+gdf.plot(ax=ax, alpha=0.5, marker='o', color='red', markersize=10)
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+plt.title('Accident Locations')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.savefig('Plots/accident_locations.png') 
+plt.show()
+
+# ============ DBSCAN Clustering ============
+from sklearn.cluster import DBSCAN
+import numpy as np
+
+# Extract coordinates
+coords = dataFrame[['LATITUDE', 'LONGITUDE']].to_numpy()
+
+# Apply DBSCAN
+db = DBSCAN(eps=0.01, min_samples=10, metric='haversine').fit(np.radians(coords))
+
+# Add cluster labels to the DataFrame
+dataFrame['cluster'] = db.labels_
+
+# Visualize Clusters
+plt.figure(figsize=(12, 8))
+plt.scatter(dataFrame['LONGITUDE'], dataFrame['LATITUDE'], c=dataFrame['cluster'], cmap='viridis', s=10)
+plt.title('Accident Clusters')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.savefig('Plots/accident_clusters.png')  
+plt.show()
+
+# ============ Accidents by Hour ============
+dataFrame['DATE'] = pd.to_datetime(dataFrame['DATE'])
+dataFrame['Hour'] = dataFrame['DATE'].dt.hour
+hourly_accidents = dataFrame.groupby('Hour').size()
+hourly_accidents.plot(kind='bar', figsize=(12, 6), title='Accidents by Hour')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Number of Accidents')
+plt.savefig('Plots/accidents_by_hour.png')
+plt.show()
