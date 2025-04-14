@@ -117,3 +117,34 @@ models = {
 }
 
 results = {}
+
+# Train and evaluate models
+for model_name, model_instance in models.items():
+    pipeline = ImbPipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('smote', SMOTE(random_state=42)),
+        ('classifier', model_instance)
+    ])
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+
+    results[model_name] = {
+        'Accuracy': accuracy_score(y_test, y_pred),
+        'Precision': precision_score(y_test, y_pred, average='weighted'),
+        'Recall': recall_score(y_test, y_pred, average='weighted'),
+        'F1 Score': f1_score(y_test, y_pred, average='weighted')
+    }
+
+    print(f"\nModel: {model_name}")
+    print(classification_report(y_test, y_pred))
+
+    # Confusion Matrix Plot
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Blues')
+    plt.title(f'Confusion Matrix - {model_name}')
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.tight_layout()
+    plt.savefig(f'Plots/confusion_matrix_{model_name}.png') 
+    plt.show()
