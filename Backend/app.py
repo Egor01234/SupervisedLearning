@@ -122,3 +122,53 @@ def make_prediction(model_name, data):
         traceback.print_exc()
         return jsonify({"error": f"An internal error occurred during prediction with {model_name}."}), 500
 
+
+@app.route('/')
+def home():
+    loaded_models = [name for name, model in models.items() if model is not None]
+    return jsonify({
+        "message": "Motorcyclist Accident Severity Prediction API",
+        "status": "Service is running",
+        "available_models": loaded_models,
+        "endpoints": [f"/predict/{name.lower()}" for name in loaded_models]
+        })
+
+
+@app.route('/predict/decisiontree', methods=['POST'])
+def predict_decision_tree():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    return make_prediction('DecisionTree', data)
+
+@app.route('/predict/randomforest', methods=['POST'])
+def predict_random_forest():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    return make_prediction('RandomForest', data)
+
+@app.route('/predict/gradientboosting', methods=['POST'])
+def predict_gradient_boosting():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    return make_prediction('GradientBoosting', data)
+
+@app.route('/predict/logisticregression', methods=['POST'])
+def predict_logistic_regression():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    return make_prediction('LogisticRegression', data)
+
+@app.route('/predict/svm', methods=['POST'])
+def predict_svm():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    return make_prediction('SVM', data)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
