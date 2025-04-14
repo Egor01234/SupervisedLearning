@@ -1,10 +1,12 @@
 # Motorcyclist Accident Severity Prediction
-#Use these Imports to run Backend
-##pip install pandas numpy matplotlib seaborn scikit-learn imbalanced-learn geopandas contextily joblib Flask Flask-CORS
-##or 
-##conda install -c conda-forge pandas numpy matplotlib seaborn scikit-learn imbalanced-learn geopandas contextily joblib flask flask-cors
-#And for Frontend
-##npm install react react-dom react-router-dom
+# Use these Imports to run Backend
+
+## pip install pandas numpy matplotlib seaborn scikit-learn imbalanced-learn geopandas contextily joblib Flask Flask-CORS
+
+## or 
+## conda install -c conda-forge pandas numpy matplotlib seaborn scikit-learn imbalanced-learn geopandas contextily joblib flask flask-cors
+# And for Frontend
+## npm install react react-dom react-router-dom
 This project predicts the severity (Fatal vs. Non-Fatal Injury) of motorcyclist accidents based on various input factors. It consists of a Python Flask backend API for model training and prediction, and a React frontend for user interaction.
 
 ## Table of Contents
